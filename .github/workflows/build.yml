@@ -1,0 +1,83 @@
+name: Build and Release CPReturned
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Required for semantic-release
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install flatpak (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install flatpak flatpak-builder elfutils -y
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install flathub org.freedesktop.Platform/x86_64/22.08 org.freedesktop.Sdk/x86_64/22.08 org.electronjs.Electron2.BaseApp/x86_64/22.08 -y
+          git config --global --add protocol.file.allow always
+
+      - name: Build and Package (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: yarn run publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} #Use GITHUB_TOKEN for releases
+
+      - name: Build and Package (Windows)
+        if: startsWith(matrix.os, 'windows')
+        run: yarn run publish-windows
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} #Use GITHUB_TOKEN for releases
+
+      - name: Build and Package (macOS)
+        if: startsWith(matrix.os, 'macos')
+        run: yarn run publish-mac
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} #Use GITHUB_TOKEN for releases
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag' #Release only if it is a tag.
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v3
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
