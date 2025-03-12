@@ -1,13 +1,18 @@
-name: Build and Release CPReturned
+name: Build NewCP-App
 
+# Controls when the action will run.
 on:
+  # Triggers the workflow on push for production branch
   push:
     branches:
-      - master
+      - production
 
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  # This workflow contains a single job called "build"
   build:
-    name: Build and Release
+    # The type of runner that the job will run on
+    name: Build NewCP-App
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -15,81 +20,40 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 # Required for semantic-release
+        uses: actions/checkout@v2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v1
         with:
-          node-version: '20.x'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
-          run_install: false
+          node-version: '16.x'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: yarn
 
-      - name: Install flatpak (Ubuntu)
+      - name: Install flatpak
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo apt-get update
-          sudo apt-get install flatpak flatpak-builder elfutils -y
+          sudo apt-get install flatpak -y
+          sudo apt-get install flatpak-builder -y
+          sudo apt-get install elfutils -y
           sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
           sudo flatpak install flathub org.freedesktop.Platform/x86_64/22.08 org.freedesktop.Sdk/x86_64/22.08 org.electronjs.Electron2.BaseApp/x86_64/22.08 -y
           git config --global --add protocol.file.allow always
 
-      - name: Build and Package (Ubuntu)
+      - name: Make and Publish (Ubuntu)
         if: startsWith(matrix.os, 'ubuntu')
-        run: pnpm run publish
+        run: yarn run publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} #Use GITHUB_TOKEN for releases
+          GITHUB_TOKEN: ${{ secrets.BUILD_TOKEN }}
 
-      - name: Build and Package (Windows)
+      - name: Make and Publish (WINDOWS)
         if: startsWith(matrix.os, 'windows')
-        run: pnpm run publish-windows
+        run: yarn run publish-windows
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} #Use GITHUB_TOKEN for releases
+          GITHUB_TOKEN: ${{ secrets.BUILD_TOKEN }}
 
-      - name: Build and Package (macOS)
+      - name: Make and Publish (MAC)
         if: startsWith(matrix.os, 'macos')
-        run: pnpm run publish-mac
+        run: yarn run publish-mac
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} #Use GITHUB_TOKEN for releases
-
-  release:
-    name: Create Release
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref_type == 'tag' #Release only if it is a tag.
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-          run_install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v3
-        with:
-          extra_plugins: |
-            @semantic-release/changelog
-            @semantic-release/git
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BUILD_TOKEN }}

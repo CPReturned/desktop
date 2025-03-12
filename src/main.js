@@ -1,9 +1,10 @@
 const {app, BrowserWindow, autoUpdater} = require("electron");
-const discord_integration = require('./integrations/discord');
 const path = require("path");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) app.quit();
+
+if (process.platform !== "darwin") require("update-electron-app")({ repo: "CPReturned/desktop" });
 
 const ALLOWED_ORIGINS = [
     "https://cpreturned.com",
@@ -34,10 +35,7 @@ const createWindow = () => {
         webPreferences: {
             plugins: true,
         },
-    });
-
-    mainWindow.webContents.on("did-finish-load", () => {
-        discord_integration.initDiscordRichPresence();
+        title: 'Club Penguin Returned'
     });
 
     mainWindow.webContents.on("will-navigate", (event, urlString) => {
@@ -54,7 +52,11 @@ const createWindow = () => {
 
     // You're welcome to visit this online if you're having a browse through the code.
     // With that said, you'll only see what you'll already see on the desktop client.
-    mainWindow.loadURL("https://cpreturned.com/_desktopclient");
+    mainWindow.loadURL("https://play.cpreturned.com/#/login");
+
+    mainWindow.once("ready-to-show", () => {
+        mainWindow.show();
+    });
 };
 
 const launchMain = () => {

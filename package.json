@@ -1,7 +1,7 @@
 {
   "name": "cpreturned",
   "productName": "cpreturned",
-  "version": "1.6.1",
+  "version": "1.0.0",
   "description": "cpreturned",
   "main": "src/main.js",
   "scripts": {
@@ -28,7 +28,6 @@
           "config": {
             "name": "cpreturned",
             "authors": "CPReturned",
-            "loadingGif": "./src/assets/default-splash.gif",
             "setupIcon": "./lib/icons/icon.ico"
           }
         },
@@ -77,6 +76,18 @@
             "icon": "./lib/icons/icon.ico"
           }
         }
+      ],
+      "publishers": [
+        {
+          "name": "@electron-forge/publisher-github",
+          "config": {
+            "repository": {
+              "owner": "CPReturned",
+              "name": "desktop"
+            },
+            "prerelease": true
+          }
+        }
       ]
     }
   },
@@ -92,7 +103,7 @@
     ],
     "appId": "com.cpreturned.desktop",
     "productName": "CPReturned",
-    "copyright": "Copyright © 2020 ${author}",
+    "copyright": "Copyright © 2025 ${author}",
     "mac": {
       "icon": "./lib/icons/icon.icns",
       "category": "lib.games.cpreturned"
@@ -118,16 +129,22 @@
     "update-electron-app": "^2.0.1"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.54",
-    "@electron-forge/maker-appx": "^6.0.0-beta.54",
-    "@electron-forge/maker-deb": "^6.0.0-beta.54",
-    "@electron-forge/maker-dmg": "^6.0.0-beta.54",
+    "@electron-forge/cli": "^7.7.0",
+    "@electron-forge/maker-appx": "^7.7.0",
+    "@electron-forge/maker-deb": "^7.7.0",
+    "@electron-forge/maker-dmg": "^7.7.0",
     "@electron-forge/maker-flatpak": "^6.0.0-beta.64",
-    "@electron-forge/maker-rpm": "^6.0.0-beta.54",
-    "@electron-forge/maker-squirrel": "^6.0.0-beta.54",
-    "@electron-forge/maker-zip": "^6.0.0-beta.54",
-    "@electron-forge/publisher-github": "^6.0.0-beta.54",
+    "@electron-forge/maker-rpm": "^7.7.0",
+    "@electron-forge/maker-squirrel": "^7.7.0",
+    "@electron-forge/maker-zip": "^7.7.0",
+    "@electron-forge/publisher-github": "^7.7.0",
     "electron": "11.1.1",
     "node-gyp": "^11.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "electron-winstaller"
+    ]
   }
 }
